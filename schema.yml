@@ -1,0 +1,1210 @@
+openapi: 3.0.3
+info:
+  title: Service Marketplace API
+  version: 1.0.0
+  description: A comprehensive API for service marketplace platform
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: Authenticate user and get JWT tokens
+      summary: User login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: 'Create a new user account. Available roles: client, worker, admin'
+      summary: Register a new user
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/users/:
+    get:
+      operationId: auth_users_list
+      description: Get a list of all users (admin only)
+      summary: List all users
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+  /api/auth/users/{id}/:
+    get:
+      operationId: auth_users_retrieve
+      description: Retrieve user information
+      summary: Get user details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: auth_users_update
+      description: Update user information
+      summary: Update user
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: auth_users_partial_update
+      description: Partially update user information
+      summary: Partially update user
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/worker-profile/:
+    get:
+      operationId: auth_worker_profile_retrieve
+      description: Retrieve worker profile information
+      summary: Get worker profile
+      tags:
+      - Workers
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerProfile'
+          description: ''
+    put:
+      operationId: auth_worker_profile_update
+      description: Update worker profile information
+      summary: Update worker profile
+      tags:
+      - Workers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkerProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkerProfileRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerProfile'
+          description: ''
+    patch:
+      operationId: auth_worker_profile_partial_update
+      description: Partially update worker profile information
+      summary: Partially update worker profile
+      tags:
+      - Workers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkerProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkerProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkerProfileRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerProfile'
+          description: ''
+  /api/orders/:
+    get:
+      operationId: orders_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderList'
+          description: ''
+  /api/orders/{order_id}/assign/:
+    post:
+      operationId: orders_assign_create
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/orders/{order_id}/status/:
+    post:
+      operationId: orders_status_create
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/orders/{id}/:
+    get:
+      operationId: orders_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    put:
+      operationId: orders_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    patch:
+      operationId: orders_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/orders/create/:
+    post:
+      operationId: orders_create_create
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreate'
+          description: ''
+  /api/payments/:
+    get:
+      operationId: payments_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - payments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentList'
+          description: ''
+  /api/payments/{payment_id}/refund/:
+    post:
+      operationId: payments_refund_create
+      parameters:
+      - in: path
+        name: payment_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - payments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/payments/{id}/:
+    get:
+      operationId: payments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - payments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/payments/order/{order_id}/pay/:
+    post:
+      operationId: payments_order_pay_create
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+      required:
+      - username
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        service:
+          allOf:
+          - $ref: '#/components/schemas/Service'
+          readOnly: true
+        client:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        worker:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        status_history:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderStatus'
+          readOnly: true
+        description:
+          type: string
+        address:
+          type: string
+          maxLength: 500
+        scheduled_date:
+          type: string
+          format: date-time
+        quantity:
+          type: integer
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/Status64bEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - address
+      - client
+      - created_at
+      - description
+      - id
+      - scheduled_date
+      - service
+      - status_history
+      - total_price
+      - updated_at
+      - worker
+    OrderCreate:
+      type: object
+      properties:
+        service:
+          type: integer
+        description:
+          type: string
+        address:
+          type: string
+          maxLength: 500
+        scheduled_date:
+          type: string
+          format: date-time
+        quantity:
+          type: integer
+      required:
+      - address
+      - description
+      - scheduled_date
+      - service
+    OrderCreateRequest:
+      type: object
+      properties:
+        service:
+          type: integer
+        description:
+          type: string
+          minLength: 1
+        address:
+          type: string
+          minLength: 1
+          maxLength: 500
+        scheduled_date:
+          type: string
+          format: date-time
+        quantity:
+          type: integer
+      required:
+      - address
+      - description
+      - scheduled_date
+      - service
+    OrderRequest:
+      type: object
+      properties:
+        service_id:
+          type: integer
+          writeOnly: true
+        description:
+          type: string
+          minLength: 1
+        address:
+          type: string
+          minLength: 1
+          maxLength: 500
+        scheduled_date:
+          type: string
+          format: date-time
+        quantity:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status64bEnum'
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - address
+      - description
+      - scheduled_date
+      - service_id
+    OrderStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/Status64bEnum'
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        order:
+          type: integer
+      required:
+      - created_at
+      - created_by
+      - id
+      - order
+      - status
+    OrderStatusRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status64bEnum'
+        comment:
+          type: string
+        order:
+          type: integer
+      required:
+      - order
+      - status
+    PaginatedOrderList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+    PaginatedPaymentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PatchedOrderRequest:
+      type: object
+      properties:
+        service_id:
+          type: integer
+          writeOnly: true
+        description:
+          type: string
+          minLength: 1
+        address:
+          type: string
+          minLength: 1
+          maxLength: 500
+        scheduled_date:
+          type: string
+          format: date-time
+        quantity:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status64bEnum'
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+    PatchedUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        phone:
+          type: string
+          nullable: true
+          maxLength: 15
+        avatar:
+          type: string
+          format: binary
+          nullable: true
+        is_verified:
+          type: boolean
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+    PatchedWorkerProfileRequest:
+      type: object
+      properties:
+        experience_years:
+          type: integer
+        hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+        is_available:
+          type: boolean
+        bio:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: integer
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          maxLength: 3
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        gateway_transaction_id:
+          type: string
+          readOnly: true
+          nullable: true
+        gateway_response:
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        processed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        order:
+          type: integer
+        user:
+          type: integer
+      required:
+      - amount
+      - created_at
+      - gateway_response
+      - gateway_transaction_id
+      - id
+      - order
+      - payment_method
+      - processed_at
+      - updated_at
+      - user
+    PaymentMethodEnum:
+      enum:
+      - payme
+      - click
+      - card
+      type: string
+      description: |-
+        * `payme` - Payme
+        * `click` - Click
+        * `card` - Credit Card
+    PaymentStatusEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      - canceled
+      - refunded
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `processing` - Processing
+        * `completed` - Completed
+        * `failed` - Failed
+        * `canceled` - Canceled
+        * `refunded` - Refunded
+    RoleEnum:
+      enum:
+      - client
+      - worker
+      - admin
+      type: string
+      description: |-
+        * `client` - Client
+        * `worker` - Worker
+        * `admin` - Admin
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          allOf:
+          - $ref: '#/components/schemas/ServiceCategory'
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        base_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        duration_hours:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - base_price
+      - category
+      - created_at
+      - description
+      - id
+      - name
+    ServiceCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        icon:
+          type: string
+          maxLength: 50
+      required:
+      - id
+      - name
+    ServiceCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+        icon:
+          type: string
+          maxLength: 50
+      required:
+      - name
+    ServiceRequest:
+      type: object
+      properties:
+        category_id:
+          type: integer
+          writeOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+        base_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        duration_hours:
+          type: integer
+        is_active:
+          type: boolean
+      required:
+      - base_price
+      - category_id
+      - description
+      - name
+    Status64bEnum:
+      enum:
+      - pending
+      - paid
+      - in_progress
+      - completed
+      - canceled
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `paid` - Paid
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `canceled` - Canceled
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        phone:
+          type: string
+          nullable: true
+          maxLength: 15
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        is_verified:
+          type: boolean
+      required:
+      - id
+      - username
+    UserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        phone:
+          type: string
+          nullable: true
+          maxLength: 15
+        avatar:
+          type: string
+          format: binary
+          nullable: true
+        is_verified:
+          type: boolean
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    WorkerProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        experience_years:
+          type: integer
+        hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+        is_available:
+          type: boolean
+        bio:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        specializations:
+          type: array
+          items:
+            type: integer
+      required:
+      - created_at
+      - id
+      - updated_at
+      - user
+    WorkerProfileRequest:
+      type: object
+      properties:
+        experience_years:
+          type: integer
+        hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+        is_available:
+          type: boolean
+        bio:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: integer
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

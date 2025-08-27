@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django-celery-beat = "==2.5.0"
+django-celery-results = "==2.5.1"
+pillow = "*"
+drf-spectacular = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
