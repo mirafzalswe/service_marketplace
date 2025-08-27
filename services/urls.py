@@ -1,6 +1,8 @@
 from django.urls import path
-from . import views
+from .views import ServiceCategoryListView, ServiceListView, ServiceDetailView
 
 urlpatterns = [
-    # Add your service URLs here
+    path('categories/', ServiceCategoryListView.as_view(), name='service-category-list'),
+    path('', ServiceListView.as_view(), name='service-list'),
+    path('<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
 ]

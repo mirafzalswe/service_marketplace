@@ -33,7 +33,7 @@ class FakePaymentGateway:
                     'currency': 'USD',
                     'payment_method': payment_method,
                     'timestamp': int(time.time()),
-                    'gateway_fee': str(amount * Decimal('0.03')),  # 3% fee
+                    'gateway_fee': str(Decimal(str(amount)) * Decimal('0.03')),  # 3% fee
                 }
             }
         else:

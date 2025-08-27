@@ -167,6 +167,8 @@ class RefundPaymentView(APIView):
             
             if refund_response['status'] == 'refunded':
                 payment.status = 'refunded'
+                if payment.gateway_response is None:
+                    payment.gateway_response = {}
                 payment.gateway_response.update({'refund_data': refund_response})
                 payment.save()
                 

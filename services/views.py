@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from accounts.permissions import IsWorker, IsAdmin
 from .models import Service, ServiceCategory
 from .serializers import ServiceSerializer, ServiceCategorySerializer
 
@@ -35,7 +36,11 @@ class ServiceCategoryListView(generics.ListCreateAPIView):
 class ServiceListView(generics.ListCreateAPIView):
     queryset = Service.objects.filter(is_active=True)
     serializer_class = ServiceSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsWorker()]
+        return [permissions.AllowAny()]
 
 @extend_schema_view(
     get=extend_schema(
