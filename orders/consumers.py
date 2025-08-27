@@ -15,11 +15,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         self.user = await self.get_user_from_token()
         
         if self.user and self.user.is_authenticated:
-            # Join user-specific group
             self.group_name = f"user_{self.user.id}"
             await self.channel_layer.group_add(self.group_name, self.channel_name)
             
-            # Join role-specific group
             self.role_group = f"role_{self.user.role}"
             await self.channel_layer.group_add(self.role_group, self.channel_name)
             
@@ -50,7 +48,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             logger.error("Invalid JSON received")
 
-    # Handle different notification types
+
     async def order_notification(self, event):
         await self.send(text_data=json.dumps(event))
 
@@ -63,7 +61,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_user_from_token(self):
         try:
-            # Get token from query parameters
+
             token = None
             query_string = self.scope.get('query_string', b'').decode()
             if query_string:
@@ -76,10 +74,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             if not token:
                 return AnonymousUser()
             
-            # Validate token
             UntypedToken(token)
             
-            # Get user from token
             from rest_framework_simplejwt.authentication import JWTAuthentication
             jwt_auth = JWTAuthentication()
             validated_token = jwt_auth.get_validated_token(token)

@@ -12,7 +12,6 @@ User = get_user_model()
 
 class OrderModelTest(TestCase):
     def setUp(self):
-        # Create test users
         self.client_user = User.objects.create_user(
             username='client',
             email='client@example.com',
@@ -27,7 +26,6 @@ class OrderModelTest(TestCase):
             role='worker'
         )
         
-        # Create test service
         self.category = ServiceCategory.objects.create(
             name='Web Development',
             description='All web development services'
@@ -69,7 +67,6 @@ class OrderModelTest(TestCase):
 
 class OrderStatusModelTest(TestCase):
     def setUp(self):
-        # Create test users
         self.client_user = User.objects.create_user(
             username='client',
             email='client@example.com',
@@ -84,7 +81,6 @@ class OrderStatusModelTest(TestCase):
             role='worker'
         )
         
-        # Create test service and order
         self.category = ServiceCategory.objects.create(
             name='Web Development',
             description='All web development services'
@@ -132,7 +128,6 @@ class OrderAPITest(APITestCase):
     def setUp(self):
         self.client = APIClient()
         
-        # Create test users
         self.client_user = User.objects.create_user(
             username='client',
             email='client@example.com',
@@ -154,7 +149,6 @@ class OrderAPITest(APITestCase):
             role='admin'
         )
         
-        # Create test service
         self.category = ServiceCategory.objects.create(
             name='Web Development',
             description='All web development services'
@@ -168,7 +162,6 @@ class OrderAPITest(APITestCase):
             duration_hours=40
         )
         
-        # Create test order
         self.order = Order.objects.create(
             client=self.client_user,
             service=self.service,
@@ -236,12 +229,10 @@ class OrderAPITest(APITestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        # Refresh order from database
         self.order.refresh_from_db()
         self.assertEqual(self.order.assigned_worker, self.worker_user)
     
     def test_order_status_update(self):
-        # First assign worker
         self.order.assigned_worker = self.worker_user
         self.order.save()
         
@@ -261,7 +252,6 @@ class OrderStatusAPITest(APITestCase):
     def setUp(self):
         self.client = APIClient()
         
-        # Create test users
         self.client_user = User.objects.create_user(
             username='client',
             email='client@example.com',
@@ -276,7 +266,6 @@ class OrderStatusAPITest(APITestCase):
             role='worker'
         )
         
-        # Create test service and order
         self.category = ServiceCategory.objects.create(
             name='Web Development',
             description='All web development services'

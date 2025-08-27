@@ -16,7 +16,6 @@ class FakePaymentGateway:
         """
         Simulate payment processing
         """
-        # Simulate network delay
         time.sleep(random.uniform(1, 3))
         
         transaction_id = str(uuid.uuid4())
@@ -66,7 +65,6 @@ class FakePaymentGateway:
         """
         Simulate payment verification
         """
-        # In real implementation, this would call the gateway's verification API
         return {
             'status': 'completed',
             'transaction_id': transaction_id,
@@ -88,7 +86,6 @@ class FakePaymentGateway:
             'timestamp': int(time.time())
         }
 
-# Gateway instances
 payme_gateway = FakePaymentGateway()
 click_gateway = FakePaymentGateway()
 card_gateway = FakePaymentGateway()

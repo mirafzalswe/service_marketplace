@@ -13,7 +13,6 @@ def cleanup_expired_tokens():
     Clean up expired JWT tokens from the blacklist
     """
     try:
-        # Get expired tokens
         expired_tokens = OutstandingToken.objects.filter(
             expires_at__lt=timezone.now()
         )
@@ -36,11 +35,7 @@ def send_welcome_email(user_id):
     try:
         user = User.objects.get(id=user_id)
         
-        # Here you would integrate with your email service
-        # For now, just log the action
         logger.info(f"Sending welcome email to {user.email}")
-        
-        # Simulate email sending
         return f"Welcome email sent to {user.email}"
     
     except User.DoesNotExist:
@@ -58,8 +53,6 @@ def update_worker_ratings():
     try:
         from accounts.models import WorkerProfile
         
-        # This would calculate ratings based on reviews
-        # For now, just log the action
         worker_count = WorkerProfile.objects.count()
         logger.info(f"Updated ratings for {worker_count} workers")
         

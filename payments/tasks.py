@@ -19,25 +19,21 @@ def process_payment_async(payment_id):
         if payment.status != 'pending':
             return f"Payment {payment_id} is not in pending status"
         
-        # Update status to processing
         payment.status = 'processing'
         payment.save()
         
-        # Get the appropriate gateway
         gateway = GATEWAY_MAP.get(payment.payment_method)
         if not gateway:
             payment.status = 'failed'
             payment.save()
             return f"No gateway found for payment method: {payment.payment_method}"
         
-        # Process payment
         result = gateway.process_payment(
             amount=payment.amount,
             payment_method=payment.payment_method,
-            card_data=None  # Would contain actual card data in real implementation
+            card_data=None
         )
         
-        # Update payment based on result
         if result['status'] == 'completed':
             payment.status = 'completed'
             payment.gateway_transaction_id = result['transaction_id']
@@ -49,7 +45,6 @@ def process_payment_async(payment_id):
         
         payment.save()
         
-        # Send notification
         send_payment_notification.delay(payment.id, 'payment_processed')
         
         logger.info(f"Payment {payment_id} processed with status: {payment.status}")
@@ -79,7 +74,6 @@ def send_payment_notification(payment_id, notification_type):
         message = notifications.get(notification_type, 'Payment status updated')
         logger.info(f"Payment notification: {message}")
         
-        # Here you would send actual notifications
         return message
     
     except Payment.DoesNotExist:
@@ -95,7 +89,6 @@ def retry_failed_payments():
     Retry failed payments that might be recoverable
     """
     try:
-        # Find failed payments from the last 24 hours
         cutoff_time = timezone.now() - timezone.timedelta(hours=24)
         failed_payments = Payment.objects.filter(
             status='failed',
@@ -104,7 +97,6 @@ def retry_failed_payments():
         
         retry_count = 0
         for payment in failed_payments:
-            # Only retry if the order is still pending
             if payment.order.status == 'pending':
                 process_payment_async.delay(payment.id)
                 retry_count += 1

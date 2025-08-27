@@ -33,7 +33,6 @@ class PaymentCreateView(APIView):
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
-            # Create payment record
             payment = Payment.objects.create(
                 order=order,
                 user=request.user,
@@ -41,7 +40,6 @@ class PaymentCreateView(APIView):
                 payment_method=serializer.validated_data['payment_method']
             )
             
-            # Process payment through fake gateway
             gateway = GATEWAY_MAP[payment.payment_method]
             
             card_data = None
@@ -60,7 +58,6 @@ class PaymentCreateView(APIView):
                     card_data=card_data
                 )
                 
-                # Update payment with gateway response
                 payment.gateway_response = gateway_response
                 payment.gateway_transaction_id = gateway_response.get('transaction_id')
                 
@@ -70,7 +67,6 @@ class PaymentCreateView(APIView):
                     order.status = 'paid'
                     order.save()
                     
-                    # Send success notification
                     self.send_payment_notification(order, payment, 'payment_success')
                 else:
                     payment.status = 'failed'
@@ -149,7 +145,6 @@ class RefundPaymentView(APIView):
         try:
             payment = get_object_or_404(Payment, id=payment_id)
             
-            # Permission check
             if request.user.role != 'admin' and payment.user != request.user:
                 return Response({'error': 'Permission denied'}, 
                               status=status.HTTP_403_FORBIDDEN)
@@ -158,7 +153,6 @@ class RefundPaymentView(APIView):
                 return Response({'error': 'Only completed payments can be refunded'}, 
                               status=status.HTTP_400_BAD_REQUEST)
             
-            # Process refund through gateway
             gateway = GATEWAY_MAP[payment.payment_method]
             refund_response = gateway.refund_payment(
                 payment.gateway_transaction_id,
@@ -172,11 +166,9 @@ class RefundPaymentView(APIView):
                 payment.gateway_response.update({'refund_data': refund_response})
                 payment.save()
                 
-                # Update order status
                 payment.order.status = 'canceled'
                 payment.order.save()
                 
-                # Send refund notification
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
                     f"user_{payment.user.id}",

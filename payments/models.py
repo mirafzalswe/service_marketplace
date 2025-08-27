@@ -31,7 +31,6 @@ class Payment(models.Model):
     
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     
-    # Gateway specific fields
     gateway_transaction_id = models.CharField(max_length=255, blank=True, null=True)
     gateway_response = models.JSONField(blank=True, null=True)
     

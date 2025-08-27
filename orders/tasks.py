@@ -25,7 +25,6 @@ def send_order_notification(order_id, notification_type):
         message = notifications.get(notification_type, 'Order status updated')
         logger.info(f"Order notification: {message}")
         
-        # Here you would send actual notifications (email, SMS, push, etc.)
         return message
     
     except Order.DoesNotExist:
@@ -45,7 +44,6 @@ def auto_assign_orders():
         assigned_count = 0
         
         for order in pending_orders:
-            # Simple assignment logic - find workers with matching service category
             available_workers = User.objects.filter(
                 role='worker',
                 is_active=True,
@@ -53,14 +51,11 @@ def auto_assign_orders():
             )
             
             if available_workers.exists():
-                # For now, just assign to the first available worker
-                # In a real system, you'd implement more sophisticated logic
                 worker = available_workers.first()
                 order.worker = worker
                 order.status = 'assigned'
                 order.save()
                 
-                # Create status history
                 OrderStatus.objects.create(
                     order=order,
                     status='assigned',
@@ -70,7 +65,6 @@ def auto_assign_orders():
                 
                 assigned_count += 1
                 
-                # Send notification
                 send_order_notification.delay(order.id, 'order_assigned')
         
         logger.info(f"Auto-assigned {assigned_count} orders")
@@ -86,7 +80,6 @@ def cleanup_old_orders():
     Clean up old completed/canceled orders
     """
     try:
-        # Delete orders older than 1 year that are completed or canceled
         cutoff_date = timezone.now() - timezone.timedelta(days=365)
         old_orders = Order.objects.filter(
             created_at__lt=cutoff_date,

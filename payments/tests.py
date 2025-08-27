@@ -14,7 +14,6 @@ User = get_user_model()
 
 class PaymentModelTest(TestCase):
     def setUp(self):
-        # Create test users
         self.client_user = User.objects.create_user(
             username='client',
             email='client@example.com',
@@ -29,7 +28,6 @@ class PaymentModelTest(TestCase):
             role='worker'
         )
         
-        # Create test service and order
         self.category = ServiceCategory.objects.create(
             name='Web Development',
             description='All web development services'
@@ -81,7 +79,6 @@ class PaymentAPITest(APITestCase):
     def setUp(self):
         self.client = APIClient()
         
-        # Create test users
         self.client_user = User.objects.create_user(
             username='client',
             email='client@example.com',
@@ -103,7 +100,6 @@ class PaymentAPITest(APITestCase):
             role='admin'
         )
         
-        # Create test service and order
         self.category = ServiceCategory.objects.create(
             name='Web Development',
             description='All web development services'
@@ -159,7 +155,6 @@ class PaymentAPITest(APITestCase):
     
     @patch('payments.fake_gateway.FakePaymentGateway.process_payment')
     def test_create_payment_success(self, mock_process):
-        # Mock successful payment processing
         mock_process.return_value = {
             'status': 'completed',
             'transaction_id': 'txn_987654321',
@@ -219,11 +214,9 @@ class PaymentAPITest(APITestCase):
     
     @patch('payments.fake_gateway.FakePaymentGateway.refund_payment')
     def test_refund_payment_success(self, mock_refund):
-        # Set payment to completed first
         self.payment.status = 'completed'
         self.payment.save()
         
-        # Mock successful refund processing
         mock_refund.return_value = {
             'status': 'refunded',
             'refund_id': 'ref_123456789',
@@ -241,11 +234,9 @@ class PaymentAPITest(APITestCase):
     
     @patch('payments.fake_gateway.FakePaymentGateway.refund_payment')
     def test_refund_payment_failure(self, mock_refund):
-        # Set payment to completed first
         self.payment.status = 'completed'
         self.payment.save()
         
-        # Mock failed refund processing
         mock_refund.return_value = {
             'status': 'failed',
             'refund_id': None,
@@ -276,32 +267,29 @@ class FakePaymentGatewayTest(TestCase):
     def test_process_payment_structure(self):
         result = self.gateway.process_payment(100.00, 'card', 'card_123')
         
-        # Check that result has required keys
         self.assertIn('status', result)
         self.assertIn('transaction_id', result)
         self.assertIn('gateway_response', result)
         
-        # Check that status is string
+        self.assertIsInstance(result['status'], str)
         self.assertIsInstance(result['status'], str)
     
     def test_verify_payment_structure(self):
         result = self.gateway.verify_payment('txn_123456789')
         
-        # Check that result has required keys
         self.assertIn('status', result)
         self.assertIn('transaction_id', result)
         self.assertIn('verified', result)
         
-        # Check that verified is boolean
+        self.assertIsInstance(result['verified'], bool)
         self.assertIsInstance(result['verified'], bool)
     
     def test_process_refund_structure(self):
         result = self.gateway.refund_payment('txn_123456789', 100.00)
         
-        # Check that result has required keys
         self.assertIn('status', result)
         self.assertIn('refund_id', result)
         self.assertIn('original_transaction_id', result)
         
-        # Check that status is string
+        self.assertIsInstance(result['status'], str)
         self.assertIsInstance(result['status'], str)

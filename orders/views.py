@@ -20,7 +20,6 @@ class OrderCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         order = serializer.save()
         
-        # Send real-time notification
         self.send_order_notification(order, 'order_created')
         
         return order
@@ -28,7 +27,6 @@ class OrderCreateView(generics.CreateAPIView):
     def send_order_notification(self, order, notification_type):
         channel_layer = get_channel_layer()
         
-        # Notify client
         async_to_sync(channel_layer.group_send)(
             f"user_{order.client.id}",
             {
@@ -40,7 +38,6 @@ class OrderCreateView(generics.CreateAPIView):
             }
         )
         
-        # Notify workers with matching specialization
         workers = order.service.workers.filter(is_available=True)
         for worker in workers:
             async_to_sync(channel_layer.group_send)(
@@ -98,17 +95,14 @@ class OrderStatusUpdateView(APIView):
             new_status = request.data.get('status')
             comment = request.data.get('comment', '')
             
-            # Permission check
             if request.user.role == 'client' and order.client != request.user:
                 return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
             elif request.user.role == 'worker' and order.worker != request.user:
                 return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
             
-            # Update order status
             order.status = new_status
             order.save()
             
-            # Create status history
             OrderStatus.objects.create(
                 order=order,
                 status=new_status,
@@ -116,7 +110,6 @@ class OrderStatusUpdateView(APIView):
                 created_by=request.user
             )
             
-            # Send real-time notification
             self.send_status_update_notification(order, new_status, comment)
             
             return Response(OrderSerializer(order).data)
@@ -127,7 +120,6 @@ class OrderStatusUpdateView(APIView):
     def send_status_update_notification(self, order, new_status, comment):
         channel_layer = get_channel_layer()
         
-        # Notify client
         async_to_sync(channel_layer.group_send)(
             f"user_{order.client.id}",
             {
@@ -139,7 +131,6 @@ class OrderStatusUpdateView(APIView):
             }
         )
         
-        # Notify worker if assigned
         if order.worker:
             async_to_sync(channel_layer.group_send)(
                 f"user_{order.worker.id}",
@@ -172,7 +163,6 @@ class AssignWorkerView(APIView):
             order.status = 'in_progress'
             order.save()
             
-            # Create status history
             OrderStatus.objects.create(
                 order=order,
                 status='in_progress',
@@ -180,7 +170,6 @@ class AssignWorkerView(APIView):
                 created_by=request.user
             )
             
-            # Send notification
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f"user_{order.client.id}",
