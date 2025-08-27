@@ -201,6 +201,32 @@ CORS_ALLOWED_ORIGINS = [
 # Celery Configuration
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-expired-tokens': {
+        'task': 'accounts.tasks.cleanup_expired_tokens',
+        'schedule': 3600.0,  # Run every hour
+    },
+    'auto-assign-orders': {
+        'task': 'orders.tasks.auto_assign_orders',
+        'schedule': 300.0,  # Run every 5 minutes
+    },
+    'retry-failed-payments': {
+        'task': 'payments.tasks.retry_failed_payments',
+        'schedule': 1800.0,  # Run every 30 minutes
+    },
+    'generate-payment-report': {
+        'task': 'payments.tasks.generate_payment_report',
+        'schedule': 86400.0,  # Run daily
+    },
+    'cleanup-old-orders': {
+        'task': 'orders.tasks.cleanup_old_orders',
+        'schedule': 604800.0,  # Run weekly
+    },
+}
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'

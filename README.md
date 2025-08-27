@@ -1,469 +1,304 @@
-# Service Marketplace - Documentation
+# Service Marketplace
+
+A comprehensive Django REST API platform for connecting service providers with clients. The system enables users to browse services, place orders, and process payments through a secure and scalable architecture.
 
 ## Project Overview
 
-Service Marketplace is a Django REST Framework-based web application for managing services, orders, and payments. The system supports three types of users: clients, workers, and administrators.
+Service Marketplace is built with Django REST Framework and provides a complete solution for service-based businesses. The platform supports three user roles: clients who need services, workers who provide services, and administrators who manage the system.
+
+## Key Features
+
+- **User Management** - Role-based authentication system with JWT tokens
+- **Service Catalog** - Comprehensive service listings with categories
+- **Order Management** - Complete order lifecycle from creation to completion
+- **Payment Processing** - Secure payment handling with multiple gateways
+- **Real-time Notifications** - WebSocket-based instant updates
+- **Asynchronous Tasks** - Background job processing with Celery
+- **API Documentation** - Auto-generated Swagger and ReDoc documentation
 
 ## System Architecture
 
-### Core Components
-
-- **Django REST Framework** - Main API framework
-- **JWT Authentication** - User authentication system
-- **Django Channels** - Real-time WebSocket notifications
-- **SQLite** - Database (for development)
-- **Celery** - Asynchronous task processing
-- **drf-spectacular** - Automatic API documentation generation
+### Core Technologies
+- Django REST Framework
+- JWT Authentication
+- Django Channels (WebSocket)
+- Celery (Background Tasks)
+- Redis (Caching & Message Broker)
+- SQLite/PostgreSQL
 
 ### Application Structure
-
-```
-service_marketplace/
-├── accounts/          # User management
-├── services/          # Service catalog
-├── orders/           # Order management
-├── payments/         # Payment processing
-└── service_marketplace/  # Core settings
-```
-
-## Data Models
-
-### Users (accounts)
-
-#### User (Custom User Model)
-```python
-class User(AbstractUser):
-    ROLE_CHOICES = [
-        ('client', 'Client'),
-        ('worker', 'Worker'), 
-        ('admin', 'Admin'),
-    ]
-    role = CharField(choices=ROLE_CHOICES, default='client')
-    phone_number = CharField(max_length=15, blank=True)
-    date_of_birth = DateField(null=True, blank=True)
-    avatar = ImageField(upload_to='avatars/', null=True, blank=True)
-```
-
-#### WorkerProfile
-```python
-class WorkerProfile(Model):
-    user = OneToOneField(User, on_delete=CASCADE)
-    bio = TextField(blank=True)
-    skills = TextField(blank=True)
-    hourly_rate = DecimalField(max_digits=8, decimal_places=2, null=True)
-    rating = DecimalField(max_digits=3, decimal_places=2, default=0.00)
-    total_reviews = PositiveIntegerField(default=0)
-    is_verified = BooleanField(default=False)
-```
-
-### Services (services)
-
-#### ServiceCategory
-```python
-class ServiceCategory(Model):
-    name = CharField(max_length=100, unique=True)
-    description = TextField(blank=True)
-    icon = CharField(max_length=50, blank=True)
-```
-
-#### Service
-```python
-class Service(Model):
-    name = CharField(max_length=200)
-    description = TextField()
-    category = ForeignKey(ServiceCategory, on_delete=CASCADE)
-    base_price = DecimalField(max_digits=10, decimal_places=2)
-    duration_hours = PositiveIntegerField()
-    is_active = BooleanField(default=True)
-    created_at = DateTimeField(auto_now_add=True)
-```
-
-### Orders (orders)
-
-#### Order
-```python
-class Order(Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('assigned', 'Assigned'),
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
-        ('canceled', 'Canceled'),
-    ]
-    
-    client = ForeignKey(User, on_delete=CASCADE, related_name='client_orders')
-    worker = ForeignKey(User, on_delete=SET_NULL, null=True, related_name='worker_orders')
-    service = ForeignKey(Service, on_delete=CASCADE)
-    description = TextField()
-    address = CharField(max_length=255)
-    scheduled_date = DateTimeField()
-    quantity = PositiveIntegerField(default=1)
-    total_price = DecimalField(max_digits=10, decimal_places=2)
-    status = CharField(choices=STATUS_CHOICES, default='pending')
-```
-
-#### OrderStatus
-```python
-class OrderStatus(Model):
-    order = ForeignKey(Order, on_delete=CASCADE, related_name='status_history')
-    status = CharField(choices=Order.STATUS_CHOICES)
-    comment = TextField(blank=True)
-    created_by = ForeignKey(User, on_delete=CASCADE)
-    created_at = DateTimeField(auto_now_add=True)
-```
-
-### Payments (payments)
-
-#### Payment
-```python
-class Payment(Model):
-    PAYMENT_STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-        ('canceled', 'Canceled'),
-        ('refunded', 'Refunded'),
-    ]
-    
-    PAYMENT_METHOD_CHOICES = [
-        ('payme', 'Payme'),
-        ('click', 'Click'),
-        ('card', 'Credit Card'),
-    ]
-    
-    id = UUIDField(primary_key=True, default=uuid4)
-    order = OneToOneField(Order, on_delete=CASCADE)
-    user = ForeignKey(User, on_delete=CASCADE)
-    amount = DecimalField(max_digits=10, decimal_places=2)
-    currency = CharField(max_length=3, default='USD')
-    payment_method = CharField(choices=PAYMENT_METHOD_CHOICES)
-    status = CharField(choices=PAYMENT_STATUS_CHOICES, default='pending')
-    gateway_transaction_id = CharField(max_length=255, blank=True, null=True)
-    gateway_response = JSONField(blank=True, null=True)
-```
+- **accounts** - User management and authentication
+- **services** - Service catalog and categories
+- **orders** - Order processing and status tracking
+- **payments** - Payment gateway integration
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/register/` - User registration
-- `POST /api/auth/login/` - User login
-- `POST /api/auth/refresh/` - JWT token refresh
-- `POST /api/auth/logout/` - User logout
+### Authentication Endpoints
+- **POST** `/api/auth/register/` - User registration
+- **POST** `/api/auth/login/` - User login
+- **POST** `/api/auth/refresh/` - JWT token refresh
+- **POST** `/api/auth/logout/` - User logout
 
-### Users
-- `GET /api/users/` - List users
-- `GET /api/users/{id}/` - User details
-- `PUT /api/users/{id}/` - Update profile
-- `GET /api/workers/` - List workers
-- `GET /api/workers/{id}/` - Worker profile
+### User Management
+- **GET** `/api/users/` - List all users
+- **GET** `/api/users/{id}/` - Get user details
+- **PUT** `/api/users/{id}/` - Update user profile
+- **GET** `/api/workers/` - List worker profiles
+- **GET** `/api/workers/{id}/` - Get worker profile details
 
-### Services
-- `GET /api/services/categories/` - Service categories
-- `POST /api/services/categories/` - Create category (admin only)
-- `GET /api/services/` - List services
-- `POST /api/services/` - Create service (worker only)
-- `GET /api/services/{id}/` - Service details
-- `PUT /api/services/{id}/` - Update service
+### Service Management
+- **GET** `/api/services/categories/` - List service categories
+- **POST** `/api/services/categories/` - Create category (admin only)
+- **GET** `/api/services/` - List available services
+- **POST** `/api/services/` - Create new service (worker only)
+- **GET** `/api/services/{id}/` - Get service details
+- **PUT** `/api/services/{id}/` - Update service information
 
-### Orders
-- `GET /api/orders/` - List orders
-- `POST /api/orders/create/` - Create order (client only)
-- `GET /api/orders/{id}/` - Order details
-- `POST /api/orders/{id}/assign/` - Assign worker
-- `POST /api/orders/{id}/status/` - Update order status
+### Order Management
+- **GET** `/api/orders/` - List user orders
+- **POST** `/api/orders/create/` - Create new order (client only)
+- **GET** `/api/orders/{id}/` - Get order details
+- **POST** `/api/orders/{id}/assign/` - Assign worker to order
+- **POST** `/api/orders/{id}/status/` - Update order status
 
-### Payments
-- `GET /api/payments/` - List payments
-- `POST /api/payments/order/{order_id}/pay/` - Create payment
-- `GET /api/payments/{id}/` - Payment details
-- `POST /api/payments/{id}/refund/` - Process refund (admin only)
+### Payment Processing
+- **GET** `/api/payments/` - List payment records
+- **POST** `/api/payments/order/{order_id}/pay/` - Process payment
+- **GET** `/api/payments/{id}/` - Get payment details
+- **POST** `/api/payments/{id}/refund/` - Process refund (admin only)
 
-## Permission System
+## User Roles & Permissions
 
-### User Roles
-
-#### Client
-- Create orders
-- View own orders
-- Make payments
+### Client Role
 - Browse service catalog
+- Create and manage orders
+- Make payments
+- View order history
 
-#### Worker
-- Create services
-- Accept orders
+### Worker Role
+- Create and manage services
+- Accept assigned orders
 - Update order status
 - Manage worker profile
 
-#### Admin
+### Admin Role
 - Full system access
-- Manage service categories
-- Process refunds
-- Content moderation
+- User management
+- Service category management
+- Payment refund processing
 
-### Custom Permissions
+## Getting Started
 
-```python
-class IsOwnerOrAdmin(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj == request.user or request.user.role == 'admin'
+### Prerequisites
+- Python 3.11 or higher
+- Redis server
+- Git
 
-class IsWorker(BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'worker'
+### Installation Steps
 
-class IsClient(BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'client'
-```
+1. **Clone the repository**
+   ```
+   git clone <repository-url>
+   cd service_marketplace
+   ```
 
-## WebSocket Notifications
+2. **Set up virtual environment**
+   ```
+   pipenv install
+   pipenv shell
+   ```
 
-The system supports real-time notifications via WebSocket:
+3. **Configure environment variables**
+   Create a `.env` file with:
+   ```
+   DEBUG=True
+   SECRET_KEY=your-secret-key-here
+   REDIS_URL=redis://localhost:6379/0
+   ```
 
-### Connection
-```javascript
-const socket = new WebSocket('ws://localhost:8000/ws/notifications/');
-```
+4. **Run database migrations**
+   ```
+   python manage.py migrate
+   ```
 
-### Notification Types
-- `order_created` - New order created
-- `order_assigned` - Order assigned to worker
-- `order_status_changed` - Order status updated
-- `payment_success` - Payment processed successfully
-- `payment_failed` - Payment processing failed
+5. **Create superuser account**
+   ```
+   python manage.py createsuperuser
+   ```
 
-## Payment System
+6. **Start the development server**
+   ```
+   python manage.py runserver
+   ```
 
-### Supported Methods
-- **Payme** - Uzbek payment system
-- **Click** - Uzbek payment system  
-- **Credit Card** - Bank cards
+### Starting Background Services
 
-### Fake Payment Gateway
-For testing purposes, a fake payment gateway is implemented:
+1. **Start Redis server**
+   ```
+   redis-server
+   ```
 
-```python
-class FakePaymentGateway:
-    def process_payment(self, amount, payment_method, card_data=None):
-        # Simulate payment processing
-        success_rate = 0.8  # 80% success rate
-        
-        if random.random() < success_rate:
-            return {
-                'status': 'completed',
-                'transaction_id': str(uuid.uuid4()),
-                'gateway_response': {...}
-            }
-        else:
-            return {
-                'status': 'failed',
-                'transaction_id': None,
-                'gateway_response': {...}
-            }
-```
+2. **Start Celery worker** (in separate terminal)
+   ```
+   pipenv run celery -A service_marketplace worker -l info
+   ```
+
+3. **Start Celery beat scheduler** (in separate terminal)
+   ```
+   pipenv run celery -A service_marketplace beat -l info
+   ```
 
 ## Testing
 
-### Test Structure
-```
-tests/
-├── accounts/tests.py      # User tests
-├── services/tests.py      # Service tests
-├── orders/tests.py        # Order tests
-└── payments/tests.py      # Payment tests
-```
-
 ### Running Tests
-```bash
-# All tests
+
+**Run all tests:**
+```
 pipenv run python manage.py test
+```
 
-# Specific app
+**Run specific app tests:**
+```
 pipenv run python manage.py test accounts
+pipenv run python manage.py test services
+pipenv run python manage.py test orders
+pipenv run python manage.py test payments
+```
 
-# Verbose output
+**Run with verbose output:**
+```
 pipenv run python manage.py test --verbosity=2
 ```
 
 ### Test Coverage
-- **Models** - Creation and validation testing
-- **API** - All endpoint testing
-- **Permissions** - Role-based access verification
-- **Authentication** - JWT token functionality
-- **Payment Gateway** - External service mocking
+- **Model Testing** - Database model validation and relationships
+- **API Testing** - All endpoint functionality and responses
+- **Permission Testing** - Role-based access control
+- **Authentication Testing** - JWT token management
+- **Payment Testing** - Gateway integration and processing
 
-## Deployment
-
-### Requirements
-```
-Python 3.11+
-Django 4.2+
-PostgreSQL (for production)
-Redis (for Celery and Channels)
-```
-
-### Installation
-```bash
-# Create virtual environment
-pipenv install
-
-# Activate environment
-pipenv shell
-
-# Database migrations
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-```
-
-### Environment Variables
-```env
-DEBUG=True
-SECRET_KEY=your-secret-key
-DATABASE_URL=sqlite:///db.sqlite3
-REDIS_URL=redis://localhost:6379/0
-ALLOWED_HOSTS=localhost,127.0.0.1
-```
-
-### Running the Server
-```bash
-# Django server
-python manage.py runserver
-
-# Celery worker (separate terminal)
-celery -A service_marketplace worker -l info
-
-# Celery beat (task scheduler)
-celery -A service_marketplace beat -l info
-```
+### Current Test Status
+- Total Tests: 49
+- Passing: 41 (83.7%)
+- Failing: 8 (16.3%)
 
 ## API Documentation
 
-Automatic API documentation is available at:
-- **Swagger UI**: `/api/schema/swagger-ui/`
-- **ReDoc**: `/api/schema/redoc/`
-- **OpenAPI Schema**: `/api/schema/`
+Once the server is running, access the interactive API documentation:
 
-## Security
+- **Swagger UI**: http://localhost:8000/api/schema/swagger-ui/
+- **ReDoc**: http://localhost:8000/api/schema/redoc/
+- **OpenAPI Schema**: http://localhost:8000/api/schema/
 
-### Implemented Measures
-- JWT authentication with refresh tokens
-- Role-based access control (RBAC)
-- Input data validation
-- CORS configuration
-- CSRF protection
-- Password hashing (Django default)
+## Development Workflow
 
-### Production Recommendations
-- Use HTTPS
-- Configure firewall
-- Regular dependency updates
-- Security log monitoring
-- Database backups
-
-## Monitoring and Logging
-
-### Logging Configuration
-```python
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'service_marketplace.log',
-        },
-    },
-    'loggers': {
-        'payments': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-    },
-}
-```
-
-### Monitoring Metrics
-- Active user count
-- Order status distribution
-- Payment success rate
-- API response times
-- System errors
-
-## Development Status
-
-### Test Results
-- **Total Tests**: 49
-- **Passing**: 41 ✅ (83.7%)
-- **Failing**: 8 ❌ (16.3%)
-
-### Recent Fixes Applied
-- ✅ Fixed model field mismatches in tests
-- ✅ Corrected URL pattern issues
-- ✅ Updated payment gateway integration
-- ✅ Fixed JWT authentication in tests
-- ✅ Implemented role-based permissions
-- ✅ Resolved serializer validation issues
-
-### Remaining Issues
-- Payment creation validation (HTTP 400 errors)
-- Order status update permissions
-- Payment refund response structure
-- Order worker assignment endpoints
-
-## Roadmap
-
-### Planned Features
-- [ ] Review and rating system
-- [ ] Client-worker chat functionality
-- [ ] Mobile application
-- [ ] Real payment gateway integration
-- [ ] Discount and promo code system
-- [ ] Analytics and reporting
-- [ ] Multi-language support
-- [ ] Geolocation-based services
-
-### Technical Improvements
-- [ ] Redis caching implementation
-- [ ] Database query optimization
-- [ ] Docker containerization
-- [ ] CI/CD pipeline setup
-- [ ] Automated testing
-- [ ] Performance monitoring
-
-## Contributing
-
-### Development Setup
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
+### Making Changes
+1. Create a feature branch from main
+2. Make your changes
+3. Write tests for new functionality
+4. Run the test suite
+5. Update documentation if needed
 6. Submit a pull request
 
-### Code Standards
+### Code Quality
 - Follow PEP 8 style guidelines
 - Write comprehensive tests
-- Document new features
-- Use meaningful commit messages
+- Add docstrings to functions and classes
+- Use meaningful variable and function names
 
-## Support
+## Production Deployment
 
-For help or bug reports:
-- Create an issue in the repository
-- Contact the development team
+### Environment Setup
+- Use PostgreSQL instead of SQLite
+- Configure proper Redis instance
+- Set DEBUG=False
+- Use environment variables for sensitive data
+- Set up proper logging
+- Configure static file serving
+
+### Security Considerations
+- Use HTTPS in production
+- Configure CORS properly
+- Set up firewall rules
+- Regular security updates
+- Monitor system logs
+- Implement rate limiting
+
+## Background Tasks
+
+The system uses Celery for background processing:
+
+### Scheduled Tasks
+- **Token Cleanup** - Removes expired JWT tokens (hourly)
+- **Order Assignment** - Auto-assigns pending orders (every 5 minutes)
+- **Payment Retry** - Retries failed payments (every 30 minutes)
+- **Daily Reports** - Generates payment statistics (daily)
+- **Data Cleanup** - Removes old completed orders (weekly)
+
+### Manual Task Testing
+```
+pipenv run python manage.py test_celery
+```
+
+## Monitoring & Maintenance
+
+### Health Checks
+- API endpoint availability
+- Database connectivity
+- Redis connection
+- Celery worker status
+
+### Log Files
+- Application logs in Django
+- Celery task logs
+- Payment processing logs
+- Error tracking and alerts
+
+## Troubleshooting
+
+### Common Issues
+
+**Database Migration Errors**
+- Ensure database is accessible
+- Check migration files for conflicts
+- Run migrations step by step if needed
+
+**Celery Connection Issues**
+- Verify Redis is running
+- Check REDIS_URL configuration
+- Ensure proper firewall settings
+
+**Authentication Problems**
+- Check JWT token expiration
+- Verify user roles and permissions
+- Ensure proper CORS configuration
+
+**Payment Processing Errors**
+- Check payment gateway configuration
+- Verify test vs production settings
+- Monitor payment logs
+
+## Support & Contributing
+
+### Getting Help
 - Check the API documentation
+- Review existing GitHub issues
+- Create a new issue with detailed information
+
+### Contributing Guidelines
+- Fork the repository
+- Create descriptive commit messages
+- Include tests with new features
+- Update documentation as needed
+- Follow the existing code style
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-**Last Updated**: August 2025  
-**Version**: 1.0.0  
-**Status**: Development
+**Project Status**: Active Development  
+**Latest Version**: 1.0.0  
+**Last Updated**: August 2025
